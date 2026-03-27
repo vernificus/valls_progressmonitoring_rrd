@@ -15,14 +15,14 @@ export default function App() {
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [selectedGrade, setSelectedGrade] = useState<string>("");
   const [selectedAssessmentId, setSelectedAssessmentId] = useState<string>("");
-
+  
   const [incorrectWords, setIncorrectWords] = useState<Set<number>>(new Set());
 
   const filteredAssessments = assessments.filter((a) => a.grade === selectedGrade);
   const currentAssessment = assessments.find((a) => a.id === selectedAssessmentId);
 
   const typeOrder = ["encoding", "decoding", "letter-sounds", "phoneme-segmenting", "fluency"];
-
+  
   const assessmentsByType = filteredAssessments.reduce((acc, assessment) => {
     const type = assessment.type || "encoding";
     if (!acc[type]) {
@@ -124,8 +124,8 @@ export default function App() {
                 key={index}
                 onClick={() => toggleWordStatus(index)}
                 className={`cursor-pointer flex items-center justify-center h-20 text-4xl font-bold rounded-lg border-2 transition-colors ${
-                  isIncorrect
-                    ? "border-red-300 bg-red-50 text-red-700"
+                  isIncorrect 
+                    ? "border-red-300 bg-red-50 text-red-700" 
                     : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
                 }`}
               >
@@ -143,11 +143,11 @@ export default function App() {
         {currentAssessment.words.map((item, index) => {
           const isIncorrect = incorrectWords.has(index);
           return (
-            <Card
-              key={index}
+            <Card 
+              key={index} 
               className={`transition-colors duration-200 cursor-pointer border-2 ${
-                isIncorrect
-                  ? "border-red-200 bg-red-50"
+                isIncorrect 
+                  ? "border-red-200 bg-red-50" 
                   : "border-green-200 bg-green-50 hover:bg-green-100"
               }`}
               onClick={() => toggleWordStatus(index)}
@@ -231,7 +231,7 @@ export default function App() {
                   </SelectContent>
                 </Select>
               </div>
-
+              
               {selectedGrade && (
                 <div className="space-y-2">
                   <Label htmlFor="assessment">Assessment</Label>
@@ -257,9 +257,9 @@ export default function App() {
               )}
             </CardContent>
             <CardFooter>
-              <Button
-                className="w-full"
-                size="lg"
+              <Button 
+                className="w-full" 
+                size="lg" 
                 onClick={handleStart}
                 disabled={!studentName || !date || !selectedAssessmentId}
               >
