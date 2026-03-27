@@ -1,0 +1,5 @@
+{
+  "name": "Remix: VALLS Progress Monitoring",
+  "description": "A web app for teachers to use for VALLS progress monitoring, allowing them to track student encoding and spelling assessments.",
+  "requestFramePermissions": []
+}
