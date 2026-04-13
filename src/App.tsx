@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CheckCircle2, XCircle, RefreshCcw, ArrowRight, Save } from "lucide-react";
+import { CheckCircle2, XCircle, RefreshCcw, ArrowRight, Save, Loader2 } from "lucide-react";
 
 type AppState = "setup" | "assessment" | "results";
 
@@ -17,6 +17,7 @@ export default function App() {
   const [selectedAssessmentId, setSelectedAssessmentId] = useState<string>("");
 
   const [incorrectWords, setIncorrectWords] = useState<Set<number>>(new Set());
+  const [isSaving, setIsSaving] = useState(false);
 
   const filteredAssessments = assessments.filter((a) => a.grade === selectedGrade);
   const currentAssessment = assessments.find((a) => a.id === selectedAssessmentId);
@@ -60,8 +61,43 @@ export default function App() {
     setIncorrectWords(newIncorrect);
   };
 
-  const handleFinish = () => {
-    setAppState("results");
+  const handleFinish = async () => {
+    if (!currentAssessment) return;
+
+    setIsSaving(true);
+
+    const score = currentAssessment.words.length - incorrectWords.size;
+    const total = currentAssessment.words.length;
+
+    const incorrectWordsList = Array.from(incorrectWords).map(
+      (index) => currentAssessment.words[index as number].word || ''
+    ).filter(Boolean);
+
+    try {
+      const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwE8D6PPraiflBWaOIjw701HqQAryZzVpIvke2WwdhqbpIZYifM5xeSqRqHteP1s8YHzA/exec";
+
+      await fetch(WEB_APP_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          date: date,
+          studentName: studentName,
+          grade: selectedGrade,
+          assessment: currentAssessment.name,
+          score: score,
+          total: total,
+          incorrectWords: incorrectWordsList
+        })
+      });
+    } catch (error) {
+      console.error("Error saving data to Google Sheets:", error);
+    } finally {
+      setIsSaving(false);
+      setAppState("results");
+    }
   };
 
   const handleReset = () => {
@@ -293,8 +329,16 @@ export default function App() {
             {renderAssessmentContent()}
 
             <div className="pt-6 pb-12 flex justify-end">
-              <Button size="lg" onClick={handleFinish} className="px-8">
-                <Save className="mr-2 h-4 w-4" /> Finish Assessment
+              <Button size="lg" onClick={handleFinish} className="px-8" disabled={isSaving}>
+                {isSaving ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="mr-2 h-4 w-4" /> Finish Assessment
+                  </>
+                )}
               </Button>
             </div>
           </div>
