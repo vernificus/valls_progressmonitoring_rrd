@@ -8,6 +8,7 @@ interface PdfTemplateProps {
   score: number | string;
   total: number | string;
   incorrectWordsList: string[];
+  notes?: string;
 }
 
 export const PdfTemplate = React.forwardRef<HTMLDivElement, PdfTemplateProps>(({
@@ -17,7 +18,8 @@ export const PdfTemplate = React.forwardRef<HTMLDivElement, PdfTemplateProps>(({
   assessmentName,
   score,
   total,
-  incorrectWordsList
+  incorrectWordsList,
+  notes
 }, ref) => {
   const percentage = Math.round((Number(score) / Number(total)) * 100) || 0;
 
@@ -82,7 +84,18 @@ export const PdfTemplate = React.forwardRef<HTMLDivElement, PdfTemplateProps>(({
         )}
       </div>
 
+
+      {notes && (
+        <div style={{ marginTop: '30px' }}>
+          <h2 style={{ fontSize: '18px', borderBottom: '1px solid #ccc', paddingBottom: '10px', marginBottom: '10px' }}>
+            Assessment Notes
+          </h2>
+          <p style={{ fontSize: '14px', lineHeight: '1.5', whiteSpace: 'pre-wrap' }}>{notes}</p>
+        </div>
+      )}
+
       <div style={{ marginTop: '50px', paddingTop: '20px', borderTop: '1px solid #eee', fontSize: '12px', color: '#999', textAlign: 'center' }}>
+
         <p>This document is a record of student assessment and should be filed in the student's cumulative folder.</p>
       </div>
     </div>
