@@ -1,13 +1,17 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
+import html2pdf from "html2pdf.js";
+import { PdfTemplate } from "./PdfTemplate";
+import { HistoryView } from "./HistoryView";
+import { History } from "lucide-react";
 import { assessments, Assessment } from "./data";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CheckCircle2, XCircle, RefreshCcw, ArrowRight, Save, Loader2 } from "lucide-react";
+import { CheckCircle2, XCircle, RefreshCcw, ArrowRight, Save, Loader2, Download } from "lucide-react";
 
-type AppState = "setup" | "assessment" | "results";
+type AppState = "setup" | "assessment" | "results" | "history";
 
 export default function App() {
   const [appState, setAppState] = useState<AppState>("setup");
@@ -18,6 +22,8 @@ export default function App() {
 
   const [incorrectWords, setIncorrectWords] = useState<Set<number>>(new Set());
   const [isSaving, setIsSaving] = useState(false);
+  const pdfRef = useRef<HTMLDivElement>(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   const filteredAssessments = assessments.filter((a) => a.grade === selectedGrade);
   const currentAssessment = assessments.find((a) => a.id === selectedAssessmentId);
@@ -78,7 +84,7 @@ export default function App() {
 
       await fetch(WEB_APP_URL, {
         method: 'POST',
-        mode: 'no-cors',
+        // Removed no-cors mode to allow proper error handling if possible. If CORS fails on POST with Google Apps Script, we might need to revert to no-cors or rely on the script's redirect behavior.
         headers: {
           'Content-Type': 'application/json',
         },
@@ -97,6 +103,28 @@ export default function App() {
     } finally {
       setIsSaving(false);
       setAppState("results");
+    }
+  };
+
+
+  const handleExportPDF = async () => {
+    if (!pdfRef.current) return;
+    setIsExporting(true);
+
+    const opt = {
+      margin: 10,
+      filename: `${studentName}_${currentAssessment?.name}_${date}.pdf`,
+      image: { type: 'jpeg' as const, quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
+    };
+
+    try {
+      await html2pdf().set(opt).from(pdfRef.current).save();
+    } catch (error) {
+      console.error("Failed to generate PDF", error);
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -225,6 +253,10 @@ export default function App() {
           <p className="text-slate-500 mt-2">Assessment Tool</p>
         </header>
 
+        {appState === "history" && (
+          <HistoryView onBack={() => setAppState("setup")} />
+        )}
+
         {appState === "setup" && (
           <Card className="shadow-sm border-slate-200">
             <CardHeader>
@@ -293,6 +325,7 @@ export default function App() {
               )}
             </CardContent>
             <CardFooter>
+
               <Button
                 className="w-full"
                 size="lg"
@@ -301,6 +334,14 @@ export default function App() {
               >
                 Start Assessment <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
+              <Button
+                variant="outline"
+                className="w-full mt-2"
+                onClick={() => setAppState("history")}
+              >
+                <History className="mr-2 h-4 w-4" /> View History
+              </Button>
+
             </CardFooter>
           </Card>
         )}
@@ -344,8 +385,23 @@ export default function App() {
           </div>
         )}
 
+
         {appState === "results" && currentAssessment && (
-          <Card className="shadow-sm border-slate-200">
+          <>
+            <div style={{ display: 'none' }}>
+              <PdfTemplate
+                ref={pdfRef}
+                studentName={studentName}
+                date={date}
+                grade={selectedGrade}
+                assessmentName={currentAssessment.name}
+                score={currentAssessment.words.length - incorrectWords.size}
+                total={currentAssessment.words.length}
+                incorrectWordsList={Array.from(incorrectWords).map(index => currentAssessment.words[index as number].word).filter(Boolean)}
+              />
+            </div>
+            <Card className="shadow-sm border-slate-200">
+
             <CardHeader className="text-center pb-2">
               <CardTitle className="text-2xl">Assessment Complete</CardTitle>
               <CardDescription>Results for {studentName}</CardDescription>
@@ -399,12 +455,19 @@ export default function App() {
                 </div>
               )}
             </CardContent>
-            <CardFooter className="flex justify-center border-t pt-6 bg-slate-50 rounded-b-xl">
+
+            <CardFooter className="flex justify-center gap-4 border-t pt-6 bg-slate-50 rounded-b-xl">
               <Button variant="outline" onClick={handleReset}>
                 <RefreshCcw className="mr-2 h-4 w-4" /> Start New Assessment
               </Button>
+              <Button onClick={handleExportPDF} disabled={isExporting}>
+                {isExporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+                Export to PDF
+              </Button>
             </CardFooter>
+
           </Card>
+          </>
         )}
       </div>
     </div>
