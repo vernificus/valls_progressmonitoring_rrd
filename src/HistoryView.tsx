@@ -15,6 +15,7 @@ interface HistoryRecord {
   score: number | string;
   total: number | string;
   incorrectWords: string;
+  notes?: string;
 }
 
 interface HistoryViewProps {
@@ -193,6 +194,7 @@ export function HistoryView({ onBack }: HistoryViewProps) {
             score={selectedRecord.score}
             total={selectedRecord.total}
             incorrectWordsList={selectedRecord.incorrectWords ? selectedRecord.incorrectWords.split(',').map(w => w.trim()).filter(Boolean) : []}
+            notes={selectedRecord.notes}
           />
         </div>
       )}

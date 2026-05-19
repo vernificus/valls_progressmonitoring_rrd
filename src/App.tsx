@@ -7,6 +7,7 @@ import { assessments, Assessment } from "./data";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CheckCircle2, XCircle, RefreshCcw, ArrowRight, Save, Loader2, Download } from "lucide-react";
@@ -24,6 +25,7 @@ export default function App() {
   const [isSaving, setIsSaving] = useState(false);
   const pdfRef = useRef<HTMLDivElement>(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [notes, setNotes] = useState("");
 
   const filteredAssessments = assessments.filter((a) => a.grade === selectedGrade);
   const currentAssessment = assessments.find((a) => a.id === selectedAssessmentId);
@@ -54,6 +56,7 @@ export default function App() {
   const handleStart = () => {
     if (!studentName || !date || !selectedAssessmentId) return;
     setIncorrectWords(new Set());
+    setNotes("");
     setAppState("assessment");
   };
 
@@ -95,7 +98,8 @@ export default function App() {
           assessment: currentAssessment.name,
           score: score,
           total: total,
-          incorrectWords: incorrectWordsList
+          incorrectWords: incorrectWordsList,
+          notes: notes
         })
       });
     } catch (error) {
@@ -367,6 +371,17 @@ export default function App() {
 
             {renderAssessmentContent()}
 
+            <div className="mt-8 space-y-2">
+              <Label htmlFor="notes" className="text-base font-semibold">Assessment Notes (Optional)</Label>
+              <Textarea
+                id="notes"
+                placeholder="e.g., Struggles with medial vowel sounds, hesitant on blended consonants..."
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                className="min-h-[100px]"
+              />
+            </div>
+
             <div className="pt-6 pb-12 flex justify-end">
               <Button size="lg" onClick={handleFinish} className="px-8" disabled={isSaving}>
                 {isSaving ? (
@@ -396,6 +411,7 @@ export default function App() {
                 score={currentAssessment.words.length - incorrectWords.size}
                 total={currentAssessment.words.length}
                 incorrectWordsList={Array.from(incorrectWords).map(index => currentAssessment.words[index as number].word).filter(Boolean)}
+                notes={notes}
               />
             </div>
             <Card className="shadow-sm border-slate-200">
