@@ -84,9 +84,9 @@ export default function App() {
 
       await fetch(WEB_APP_URL, {
         method: 'POST',
-        // Removed no-cors mode to allow proper error handling if possible. If CORS fails on POST with Google Apps Script, we might need to revert to no-cors or rely on the script's redirect behavior.
+        mode: 'no-cors',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'text/plain;charset=utf-8',
         },
         body: JSON.stringify({
           date: date,
@@ -324,8 +324,7 @@ export default function App() {
                 </div>
               )}
             </CardContent>
-            <CardFooter>
-
+                        <CardFooter className="flex flex-col gap-3">
               <Button
                 className="w-full"
                 size="lg"
@@ -336,12 +335,11 @@ export default function App() {
               </Button>
               <Button
                 variant="outline"
-                className="w-full mt-2"
+                className="w-full"
                 onClick={() => setAppState("history")}
               >
                 <History className="mr-2 h-4 w-4" /> View History
               </Button>
-
             </CardFooter>
           </Card>
         )}

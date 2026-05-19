@@ -40,7 +40,14 @@ export function HistoryView({ onBack }: HistoryViewProps) {
   const fetchHistory = async () => {
     try {
       setLoading(true);
-      const response = await fetch(WEB_APP_URL);
+      // Google Apps script redirect handling
+      const response = await fetch(WEB_APP_URL + "?action=get", {
+        method: "GET",
+        redirect: "follow",
+        headers: {
+          "Accept": "application/json"
+        }
+      });
       if (!response.ok) throw new Error("Failed to fetch history");
 
       const data = await response.json();
